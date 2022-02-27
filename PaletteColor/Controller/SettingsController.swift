@@ -7,8 +7,9 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class SettingsController: UIViewController {
     
+    // MARK: - IBOutlets
     @IBOutlet var colorField: UIView!
     
     @IBOutlet var redDisplayLaible: UILabel!
@@ -23,12 +24,18 @@ class ViewController: UIViewController {
     @IBOutlet var greenDisplayValue: UITextField!
     @IBOutlet var blueDisplayValue: UITextField!
     
+    // MARK: - Publick Properties
+    var colorForMainVC: UIColor!
+    var delegate: ColorDelegate?
+    
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
         colorField.layer.cornerRadius = colorField.frame.width / 12
+        colorField.backgroundColor = colorForMainVC
         
-        setColor()
+        setValueForSlider()
         setValueForLaible()
         setValueForTextField()
     
@@ -36,8 +43,10 @@ class ViewController: UIViewController {
         addDoneButtonTo(greenDisplayValue)
         addDoneButtonTo(blueDisplayValue)
         
+        navigationItem.hidesBackButton = true
     }
-        
+    
+    // MARK: - IBActions
     @IBAction func rgbSlider(_ sender: UISlider) {
         switch sender.tag {
     case 0:
@@ -55,13 +64,21 @@ class ViewController: UIViewController {
     setColor()
 }
     
-    private func setColor() {
-        colorField.backgroundColor = UIColor(displayP3Red: CGFloat(redTune.value),
-                                             green: CGFloat(greenTune.value),
-                                             blue: CGFloat(blueTune.value),
-                                             alpha: 1)
+    @IBAction func closeVC() {
+        dismiss(animated: true)
     }
     
+  
+    func setColor() {
+        let settingColor = UIColor(displayP3Red: CGFloat(redTune.value),
+                               green: CGFloat(greenTune.value),
+                               blue: CGFloat(blueTune.value),
+                               alpha: 1)
+        colorField.backgroundColor = settingColor
+        delegate?.getColor(settingColor)
+    }
+    
+    // MARK: - Private Methods
     private func setValueForLaible() {
         redDisplayLaible.text = string(from: redTune)
         greenDisplayLaible.text = string(from: greenTune)
@@ -74,7 +91,12 @@ class ViewController: UIViewController {
         blueDisplayValue.text = string(from: blueTune)
     }
     
-    
+    private func setValueForSlider() {
+        let ciColor = CIColor(color: colorForMainVC)
+        redTune.value = Float(ciColor.red)
+        greenTune.value = Float(ciColor.green)
+        blueTune.value = Float(ciColor.blue)
+    }
     
     private func string(from slider: UISlider) -> String {
         return String(format: "%0.2f", slider.value)
@@ -83,7 +105,7 @@ class ViewController: UIViewController {
 }
 
 
-extension ViewController: UITextFieldDelegate {
+extension SettingsController: UITextFieldDelegate {
     
     //hide keyboard by tap on "Done"
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
@@ -114,12 +136,13 @@ extension ViewController: UITextFieldDelegate {
             setValueForLaible()
             
         } else {
-            showAlert(title: "Wrong format!", message: "Please enter correct value")
+            showAlert(title: "Wrong format!",
+                      message: "Please enter correct value")
         }
     }
 }
 
-extension ViewController {
+extension SettingsController {
     
     //Метод для отображения кнопки "Готово" на цифровой клавиатуре
     private func addDoneButtonTo(_ textField: UITextField) {
